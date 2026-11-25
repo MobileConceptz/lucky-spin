@@ -6,18 +6,19 @@
 <title>Lucky Wheel</title>
 <link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f1edfa;--ink:#1d1840;--muted:#6b6591;--panel:#1b1740;--lamp:#ffd23f;--lamp-ink:#2a1d00;
+:root{--bg:#0b3d2e;--ink:#fff;--muted:#d4eadf;--panel:#7a0f1f;--lamp:#ffd23f;--lamp-ink:#2a1d00;
   box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d0b22;--ink:#f2efff;--muted:#a49ecf}}
-:root[data-theme="dark"]{--bg:#0d0b22;--ink:#f2efff;--muted:#a49ecf}
+
+
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:Nunito,system-ui,sans-serif;font-weight:600;overflow-x:hidden}
+body{margin:0;background:radial-gradient(circle at 50% 0,#14684b 0,#0b3d2e 45%,#06241a 100%) fixed,var(--bg);color:var(--ink);font-family:Nunito,system-ui,sans-serif;font-weight:600;overflow-x:hidden;min-height:100vh}
 #disco{position:fixed;inset:-30%;z-index:0;opacity:0;transition:opacity .4s;pointer-events:none;
-  background:conic-gradient(#ff0080,#ffd400,#00e5ff,#7a00ff,#00ff85,#ff0080);animation:rot 2.4s linear infinite;filter:blur(40px)}
+  background:conic-gradient(#e10b2b,#ffd400,#0a9a4a,#ffffff,#e10b2b,#ffd400,#0a9a4a,#e10b2b);animation:rot 2.4s linear infinite;filter:blur(40px)}
 #disco.on{opacity:.45}
 @keyframes rot{to{transform:rotate(360deg)}}
 #conf{position:fixed;inset:0;z-index:5;pointer-events:none}
+#snow{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
 .wrap{position:relative;z-index:1;max-width:720px;margin:0 auto;padding:14px 14px 30px;text-align:center}
 header{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left}
 h1{font-family:"Bowlby One",Impact,sans-serif;font-weight:400;font-size:clamp(24px,5vw,38px);margin:0}
@@ -44,7 +45,7 @@ canvas#wheel{width:100%;height:100%;display:block}
 </style>
 </head>
 <body>
-<div id="disco"></div><canvas id="conf"></canvas>
+<div id="disco"></div><canvas id="snow"></canvas><canvas id="conf"></canvas>
 <div class="wrap">
   <header>
     <h1>Lucky Wheel</h1>
@@ -72,7 +73,7 @@ const G=[
  {n:'Electronic Toothbrush',l:'Electronic\nToothbrush',q:4},
  {n:'Bluetooth',l:'Bluetooth',q:3}];
 const PAL=['#ff3b5c','#ff9f1c','#ffd60a','#2ec27e','#00c2ff','#4361ee','#9b5de5','#f15bb5','#06d6a0','#ff6b35'];
-const N=G.length,SEG=360/N,$=id=>document.getElementById(id);
+const XM=['#ff2d2d','#ffd23f','#2ee06e','#ffffff'];const N=G.length,SEG=360/N,$=id=>document.getElementById(id);
 let rem=G.map(g=>g.q);
 try{const s=JSON.parse(localStorage.getItem('wheelStock')||'null');if(Array.isArray(s)&&s.length===N)rem=s}catch(e){}
 const save=()=>{try{localStorage.setItem('wheelStock',JSON.stringify(rem))}catch(e){}};
@@ -85,10 +86,10 @@ addEventListener('resize',size);size();
 function draw(now){
   const W=cv.width,R=W/2,wr=R*.84;
   c.clearRect(0,0,W,W);c.save();c.translate(R,R);
-  c.beginPath();c.arc(0,0,R*.98,0,7);c.fillStyle='#1b1740';c.fill();
+  c.beginPath();c.arc(0,0,R*.98,0,7);c.fillStyle='#5a0a16';c.fill();
   const lt=now/1000*(spinning?16:2.5),nb=28;
   for(let i=0;i<nb;i++){
-    const a=i/nb*Math.PI*2,on=(i+Math.floor(lt))%2===0,col=PAL[(i+Math.floor(lt/2))%10];
+    const a=i/nb*Math.PI*2,on=(i+Math.floor(lt))%2===0,col=XM[(i+Math.floor(lt/2))%4];
     c.beginPath();c.arc(Math.cos(a)*R*.915,Math.sin(a)*R*.915,R*.03,0,7);
     c.fillStyle=on?col:'#4a4470';c.shadowColor=col;c.shadowBlur=on?R*.05:0;c.fill();
   }
@@ -114,6 +115,22 @@ function draw(now){
 }
 requestAnimationFrame(draw);
 
+/* snow */
+const sn=$('snow'),sx=sn.getContext('2d');let fl=[];
+const BOX=[['#e10b2b','#ffd23f'],['#0a9a4a','#ff2d2d'],['#ffd23f','#e10b2b'],['#2f6fff','#ffffff'],['#ffffff','#e10b2b']];
+function gift(f){const s=f.r,h=s/2;sx.save();sx.translate(f.x,f.y);sx.rotate(f.a);sx.globalAlpha=.9;
+  sx.fillStyle=f.c[0];sx.fillRect(-h,-h,s,s);
+  sx.fillStyle='rgba(0,0,0,.12)';sx.fillRect(-h,h*.55,s,h*.45);
+  sx.fillStyle=f.c[1];sx.fillRect(-s*.09,-h,s*.18,s);sx.fillRect(-h,-s*.09,s,s*.18);
+  sx.beginPath();sx.ellipse(-s*.2,-h-s*.08,s*.2,s*.12,-.5,0,7);sx.fill();
+  sx.beginPath();sx.ellipse(s*.2,-h-s*.08,s*.2,s*.12,.5,0,7);sx.fill();
+  sx.fillRect(-s*.07,-h-s*.12,s*.14,s*.14);sx.restore()}
+function snowSize(){sn.width=innerWidth;sn.height=innerHeight;fl=Array.from({length:Math.max(10,Math.round(innerWidth/55))},()=>({x:Math.random()*sn.width,y:Math.random()*sn.height,r:16+Math.random()*20,v:.5+Math.random()*1,s:Math.random()*6,a:Math.random()*6,va:(Math.random()-.5)*.02,c:BOX[Math.floor(Math.random()*5)]}))}
+addEventListener('resize',snowSize);snowSize();
+(function sf(){sx.clearRect(0,0,sn.width,sn.height);const k=spinning?3:1;
+  fl.forEach(f=>{f.y+=f.v*k;f.s+=.02;f.a+=f.va*k;f.x+=Math.sin(f.s)*.5*k;if(f.y>sn.height+f.r*2){f.y=-f.r*2;f.x=Math.random()*sn.width}gift(f)});
+  requestAnimationFrame(sf)})();
+
 /* sound */
 let ctx=null,muted=false,noise=null,timer=null,nextT=0,step=0;
 function ac(){if(!ctx){try{ctx=new(window.AudioContext||window.webkitAudioContext)();
@@ -125,27 +142,29 @@ function tone(f,d,type,v,t,f2){if(!ctx||muted)return;const o=ctx.createOscillato
 function hit(t,hp,v,d){if(!ctx||muted)return;const s=ctx.createBufferSource(),f=ctx.createBiquadFilter(),g=ctx.createGain();
   s.buffer=noise;f.type=hp>3000?'highpass':'bandpass';f.frequency.value=hp;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);
   s.connect(f);f.connect(g);g.connect(ctx.destination);s.start(t);s.stop(t+d+.02)}
-const BASS=[55,55,82.4,55,65.4,65.4,98,73.4],ARP=[220,277,330,440,330,277,220,165];
+const SEQ=[[330,2],[330,2],[330,4],[330,2],[330,2],[330,4],[330,2],[392,2],[262,3],[294,1],[330,8],[349,2],[349,2],[349,3],[349,1],[349,2],[330,2],[330,2],[330,1],[330,1],[330,2],[294,2],[294,2],[330,2],[294,4],[392,4]];
+const MEL=[];SEQ.forEach(([f,d])=>{MEL.push([f,d]);for(let i=1;i<d;i++)MEL.push(null)});
+const BR=[65.4,65.4,65.4,65.4,87.3,87.3,65.4,98];
 function note(s,t){
-  if(s%4===0)tone(160,.25,'sine',.55,t,40);
-  if(s%4===2)hit(t,8000,.35,.06);else if(s%2===1)hit(t,8000,.12,.03);
-  if(s%8===4)hit(t,1600,.5,.14);
-  if(s%2===0)tone(BASS[(s>>1)%8],.18,'sawtooth',.14,t);
-  tone(ARP[s%8]*(s%16<8?1:1.5),.1,'triangle',.05,t);
+  const m=MEL[s%64];
+  if(m){tone(m[0],m[1]*.2+.3,'sine',.17,t);tone(m[0]*2,.5,'sine',.06,t);tone(m[0]*4.2,.18,'sine',.025,t)}
+  hit(t,6500,s%2?.1:.2,.07);tone(4200+(s%3)*300,.06,'sine',s%2?.012:.025,t);
+  if(s%4===0)tone(BR[(s>>3)%8],.3,'triangle',.24,t);
+  if(s%4===2)tone(BR[(s>>3)%8]*2,.18,'triangle',.08,t);
 }
 function music(on){
   clearInterval(timer);timer=null;if(!on||!ctx)return;
   nextT=ctx.currentTime+.05;step=0;
-  timer=setInterval(()=>{while(nextT<ctx.currentTime+.2){note(step%16,nextT);nextT+=60/126/4;step++}},50);
+  timer=setInterval(()=>{while(nextT<ctx.currentTime+.2){note(step%64,nextT);nextT+=.2;step++}},50);
 }
-const click=p=>tone(700+p*500,.04,'square',.05);
+const click=p=>tone(1500+p*800,.07,'sine',.07);
 function fanfare(){[523,659,784,1047].forEach((f,i)=>tone(f,.35,'triangle',.22,ctx.currentTime+i*.12));
   [1047,1319,1568].forEach((f,i)=>tone(f,.9,'sine',.16,ctx.currentTime+.5+i*.02))}
 
 /* confetti */
 const cf=$('conf'),cx=cf.getContext('2d');let parts=[];
 function confetti(){cf.width=innerWidth;cf.height=innerHeight;
-  parts=Array.from({length:150},()=>({x:innerWidth/2,y:innerHeight*.4,vx:(Math.random()-.5)*16,vy:-Math.random()*15-4,s:6+Math.random()*7,c:PAL[Math.floor(Math.random()*10)],r:0,vr:(Math.random()-.5)*.4}));
+  parts=Array.from({length:150},()=>({x:innerWidth/2,y:innerHeight*.4,vx:(Math.random()-.5)*16,vy:-Math.random()*15-4,s:6+Math.random()*7,c:XM[Math.floor(Math.random()*4)],r:0,vr:(Math.random()-.5)*.4}));
   (function f(){cx.clearRect(0,0,cf.width,cf.height);
     parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.35;p.r+=p.vr;cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;cx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);cx.restore()});
     parts=parts.filter(p=>p.y<cf.height+20);if(parts.length)requestAnimationFrame(f);else cx.clearRect(0,0,cf.width,cf.height)})()}

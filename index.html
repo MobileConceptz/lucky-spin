@@ -67,17 +67,20 @@ canvas#wheel{width:100%;height:100%;display:block}
 </div>
 <script>
 const G=[
- {n:'Glass Cleaner',l:'Glass\nCleaner',q:10},
- {n:'Foldable Chair',l:'Foldable\nChair',q:2},
- {n:'Suction Phone Pad',l:'Suction\nPhone Pad',q:10},
- {n:'Travel Pouch',l:'Travel\nPouch',q:10},
+ {n:'Travel Nylon Bag',l:'Travel\nNylon Bag',q:15},
+ {n:'Glass Water Bottle',l:'Glass Water\nBottle',q:5},
  {n:'Phone Stand',l:'Phone\nStand',q:10},
- {n:'Simba / Eight Wallet Top Up $5 / Free Port Over',l:'Top Up $5 /\nFree Port Over',q:2},
- {n:'Glass Bottle',l:'Glass\nBottle',q:5},
- {n:'Free Tempered Glass (Clear)',l:'Free\nTempered Glass',q:4},
- {n:'Electronic Toothbrush',l:'Electronic\nToothbrush',q:4},
- {n:'Bluetooth',l:'Bluetooth',q:3}];
-const PAL=['#ff3b5c','#ff9f1c','#ffd60a','#2ec27e','#00c2ff','#4361ee','#9b5de5','#f15bb5','#06d6a0','#ff6b35'];
+ {n:'Data Cable 3 in 1',l:'Data Cable\n3 in 1',q:5},
+ {n:'Mini Fan',l:'Mini\nFan',q:5},
+ {n:'Electric Toothbrush',l:'Electric\nToothbrush',q:5},
+ {n:'TWS Bluetooth Headset',l:'TWS Bluetooth\nHeadset',q:5},
+ {n:'Glass Cleaner',l:'Glass\nCleaner',q:10},
+ {n:'Silicon Pad',l:'Silicon\nPad',q:5},
+ {n:'Waterproof Bag',l:'Waterproof\nBag',q:5},
+ {n:'Phone Suction Pad',l:'Phone\nSuction Pad',q:10},
+ {n:'$5 Credits (SIMBA and EIGHT only)',l:'$5 Credits\nSIMBA / EIGHT',q:4},
+ {n:'Foldable Chair',l:'Foldable\nChair',q:1}];
+const PAL=['#ff3b5c','#ff9f1c','#ffd60a','#2ec27e','#00c2ff','#4361ee','#9b5de5','#f15bb5','#06d6a0','#ff6b35','#8ac926','#1982c4','#d62ca0'];
 const XM=['#ff2d2d','#ffd23f','#2ee06e','#ffffff'];const N=G.length,SEG=360/N,$=id=>document.getElementById(id);
 let rem=G.map(g=>g.q);
 try{const s=JSON.parse(localStorage.getItem('wheelStock')||'null');if(Array.isArray(s)&&s.length===N)rem=s}catch(e){}
@@ -186,7 +189,7 @@ function spin(){
   let r=Math.random()*pool.reduce((a,i)=>a+rem[i],0),target=pool[0];
   for(const i of pool){r-=rem[i];if(r<=0){target=i;break}}
   const th=target*SEG+SEG/2+(Math.random()-.5)*SEG*.6,r0=rot;
-  const r1=r0+360*7+((((-th-r0)%360)+360)%360),D=8500,t0=performance.now();
+  const r1=r0+360*8+((((-th-r0)%360)+360)%360),D=10000,t0=performance.now();
   $('disco').classList.add('on');music(true);let last=-1;
   (function f(now){
     const p=Math.min(1,(now-t0)/D),e=1-Math.pow(1-p,4.5);rot=r0+(r1-r0)*e;

@@ -3,11 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Lucky Wheel</title>
+<title>Lucky Spin</title>
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="apple-touch-icon.png">
-<meta name="apple-mobile-web-app-title" content="Lucky Wheel">
-<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Lucky Spin">
+<link rel="manifest" href="manifest.json">
+<script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))</script>
 <meta name="theme-color" content="#0b3d2e">
 <link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
 <style>
@@ -47,13 +48,20 @@ canvas#wheel{width:100%;height:100%;display:block}
 .chip i{width:12px;height:12px;border-radius:50%;flex:none;background:var(--c)}
 .chip b{margin-left:auto}
 .chip.out{opacity:.45;text-decoration:line-through}
+.pw{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center}
+.pw[hidden]{display:none}
+.pwbox{background:var(--panel);color:#fff;border-radius:16px;padding:20px;width:min(86vw,320px);text-align:center}
+.pwbox input{font:inherit;font-size:28px;text-align:center;letter-spacing:.3em;width:100%;margin:12px 0 6px;padding:8px;border-radius:10px;border:0}
+#pwerr{color:#ffb4b4;min-height:22px}
+.pwb button{font:inherit;font-weight:800;border:0;border-radius:999px;padding:8px 22px;margin:4px;cursor:pointer}
+#pwok{background:var(--lamp);color:var(--lamp-ink)}
 </style>
 </head>
 <body>
 <div id="disco"></div><canvas id="snow"></canvas><canvas id="conf"></canvas>
 <div class="wrap">
   <header>
-    <h1>Lucky Wheel</h1>
+    <h1>Lucky Spin</h1>
     <div class="tools"><button id="mute" aria-pressed="false">Sound on</button><button id="reset">Reset stock</button></div>
   </header>
   <div class="wheelbox"><canvas id="wheel" aria-label="Prize wheel"></canvas><div class="ptr"></div></div>
@@ -65,6 +73,7 @@ canvas#wheel{width:100%;height:100%;display:block}
   </div>
   <div class="stock" id="stock"></div>
 </div>
+<div class="pw" id="pw" hidden><div class="pwbox"><div>Enter password to reset stock</div><input id="pwin" type="password" inputmode="numeric" maxlength="8" autocomplete="off"><div id="pwerr"></div><div class="pwb"><button id="pwok">OK</button><button id="pwno">Cancel</button></div></div></div>
 <script>
 const G=[
  {n:'Travel Nylon Bag',l:'Travel\nNylon Bag',q:15},
@@ -180,7 +189,7 @@ function confetti(){cf.width=innerWidth;cf.height=innerHeight;
 /* game */
 function refresh(){
   $('stock').innerHTML=G.map((g,i)=>`<div class="chip${rem[i]<=0?' out':''}" style="--c:${PAL[i]}"><i></i>${g.n.length>26?g.l.replace('\n',' '):g.n}<b>${rem[i]}</b></div>`).join('');
-  if(!busy){const none=rem.every(q=>q<=0);spinBtn.disabled=none;spinBtn.textContent=none?'ALL GIFTS GIVEN':'SPIN';if(none)msg.textContent='All gifts are given. Tap Reset stock to start again.'}
+  if(!busy){const none=rem.every(q=>q<=0),lock=won>=0;spinBtn.disabled=none||lock;spinBtn.textContent=none?'ALL GIFTS GIVEN':(lock?'CLAIM GIFT FIRST':'SPIN');if(none)msg.textContent='All gifts are given. Tap Reset stock to start again.'}
 }
 function spin(){
   if(busy)return;const pool=rem.map((q,i)=>q>0?i:-1).filter(i=>i>=0);if(!pool.length)return;
@@ -189,7 +198,7 @@ function spin(){
   let r=Math.random()*pool.reduce((a,i)=>a+rem[i],0),target=pool[0];
   for(const i of pool){r-=rem[i];if(r<=0){target=i;break}}
   const th=target*SEG+SEG/2+(Math.random()-.5)*SEG*.6,r0=rot;
-  const r1=r0+360*8+((((-th-r0)%360)+360)%360),D=10000,t0=performance.now();
+  const r1=r0+360*7+((((-th-r0)%360)+360)%360),D=8000,t0=performance.now();
   $('disco').classList.add('on');music(true);let last=-1;
   (function f(now){
     const p=Math.min(1,(now-t0)/D),e=1-Math.pow(1-p,4.5);rot=r0+(r1-r0)*e;
@@ -200,22 +209,22 @@ function spin(){
 function done(t){
   spinning=false;music(false);$('disco').classList.remove('on');
   if(ctx)fanfare();confetti();try{navigator.vibrate&&navigator.vibrate([150,80,250])}catch(e){}
-  won=t;$('rn').textContent=G[t].n;$('claim').hidden=false;$('result').hidden=false;
-  msg.textContent='Give the gift, then tap "Gift given".';busy=false;refresh();
+  won=t;try{localStorage.setItem('wheelPending',t)}catch(e){}$('rn').textContent=G[t].n;$('claim').hidden=false;$('result').hidden=false;
+  msg.textContent='Give the gift, then tap "Gift given" to unlock the next spin.';busy=false;refresh();
 }
 $('claim').addEventListener('click',()=>{
   if(won<0)return;rem[won]--;save();$('claim').hidden=true;
-  msg.textContent=G[won].n+': '+rem[won]+' left.';won=-1;refresh();
+  msg.textContent=G[won].n+': '+rem[won]+' left.';won=-1;try{localStorage.removeItem('wheelPending')}catch(e){}refresh();
 });
 spinBtn.addEventListener('click',spin);
 $('mute').addEventListener('click',e=>{muted=!muted;e.target.textContent=muted?'Sound off':'Sound on';e.target.setAttribute('aria-pressed',muted)});
-let armed=null;
-$('reset').addEventListener('click',e=>{
-  if(busy)return;
-  if(!armed){e.target.textContent='Tap again to reset';armed=setTimeout(()=>{armed=null;e.target.textContent='Reset stock'},3000);return}
-  clearTimeout(armed);armed=null;e.target.textContent='Reset stock';
-  rem=G.map(g=>g.q);save();won=-1;$('result').hidden=true;msg.textContent='Press SPIN to win a gift';refresh();
-});
+function askPw(){const i=$('pwin');i.value='';$('pwerr').textContent='';$('pw').hidden=false;setTimeout(()=>i.focus(),50)}
+function doReset(){rem=G.map(g=>g.q);save();won=-1;try{localStorage.removeItem('wheelPending')}catch(e){}$('result').hidden=true;msg.textContent='Press SPIN to win a gift';refresh()}
+function tryPw(){if($('pwin').value==='0612'){$('pw').hidden=true;doReset()}else{$('pwerr').textContent='Wrong password';$('pwin').value=''}}
+$('reset').addEventListener('click',()=>{if(!busy)askPw()});
+$('pwok').addEventListener('click',tryPw);$('pwno').addEventListener('click',()=>{$('pw').hidden=true});
+$('pwin').addEventListener('keydown',e=>{if(e.key==='Enter')tryPw()});
+try{const pw=parseInt(localStorage.getItem('wheelPending'),10);if(pw>=0&&rem[pw]>0){won=pw;$('rn').textContent=G[pw].n;$('claim').hidden=false;$('result').hidden=false;msg.textContent='Give the gift, then tap "Gift given" to unlock the next spin.'}}catch(e){}
 refresh();
 </script>
 </body>
